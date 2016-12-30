@@ -190,6 +190,7 @@ def init():
     parser.add_argument('--deploy-service-group', dest='deploy_service_group', required=False)
     parser.add_argument('--delete-unused-service', dest='delete_unused_service', default=True, action='store_true', required=False)
     parser.add_argument('--no-delete-unused-service', dest='delete_unused_service', default=True, action='store_false', required=False)
+    parser.add_argument('--should-process-service', dest='should_process_service', default=True, action='store_true', required=False)
     return parser.parse_args()
 
 class ServiceManager(object):
@@ -362,20 +363,22 @@ if __name__ == '__main__':
         thread.setDaemon(True)
         thread.start()
 
-    # Step: Check ECS cluster
-    service_manager.check_ecs_cluster()
-
-    # Step: Delete Unused Service
-    service_manager.delete_unused_services(args.delete_unused_service)
-
-    # Step: Register New Task Definition
-    service_manager.register_new_task_definition()
-
-    # Step: service
-    service_manager.check_service()
-    service_manager.create_service()
-    service_manager.update_service()
-    service_manager.wait_for_stable()
-
-
-    service_manager.result_check()
+    if args.should_process_service:
+        # Step: Check ECS cluster
+        service_manager.check_ecs_cluster()
+        
+        # Step: Delete Unused Service
+        service_manager.delete_unused_services(args.delete_unused_service)
+        
+        # Step: Register New Task Definition
+        service_manager.register_new_task_definition()
+        
+        # Step: service
+        service_manager.check_service()
+        service_manager.create_service()
+        service_manager.update_service()
+        service_manager.wait_for_stable()
+        service_manager.result_check()
+    else:
+        # Step: *Only* Register New Task Definition
+        service_manager.register_new_task_definition()
