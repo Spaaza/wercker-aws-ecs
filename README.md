@@ -13,9 +13,8 @@ The step is written in Python 3.5 and use Pip and Boto3 module.
 * `region` (optional): Region name (default: us-east-1)
 * `task-definition-template-dir` (required): ecs task-definition jinja2 template files directory. all files below directory is loaded.
 * `task-definition-json` (required): jinja2 template input json data file. `environment:` parameter is required. only same task-definition's environment `ENVIRONMENT` service is deployed.
+* `should-process-service` (optional): If set to false then only a task definition will be deployed - nothing will be done with the service (default: true)
 * `deploy-service-group` (optional): deployment service group. if not set, all service is deployed. deploy-service-group is setting by task-definitions environment `SERVICE_GROUP` value.
-* `delete-unused-service` (optional): If template file is deleted, then related service is deleted.  (default: true)
-* `template-group` (optional): for multiple repositories deployment. on delete-unused-service, can not found template file's service is delete. But, when multiple repositories deploy, template file is divided. Then, setting `template-group`,  only task-definition's environment `TEMPLATE_GROUP` is deployed target.  only affect to delete-unused-service.
 * `threads-count` (optional): deployment thread size. (default: 10)
 
 ```yml

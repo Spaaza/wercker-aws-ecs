@@ -29,13 +29,6 @@ class ECSService(object):
     def describe_task_definition(self, taskDefinition):
         return self.client.describe_task_definition(taskDefinition=taskDefinition)
 
-    def delete_service(self, cluster, service_name):
-        self.client.update_service(cluster=cluster, service=service_name, desiredCount=0)
-        waiter = self.client.get_waiter('services_stable')
-        waiter.wait(cluster=cluster, services=[service_name])
-
-        self.client.delete_service(cluster=cluster, service=service_name)
-
     def list_services(self, cluster):
         response = self.client.list_services(cluster=cluster, maxResults=10)
         service_arn_list = response['serviceArns']

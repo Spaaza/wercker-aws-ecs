@@ -78,11 +78,11 @@ fi
 if [ ! -z "$WERCKER_AWS_ECS_DEPLOY_SERVICE_GROUP" ]; then
   DEPLOY_SERVICE_GROUP="--deploy-service-group $WERCKER_AWS_ECS_DEPLOY_SERVICE_GROUP"
 fi
-if [ "$WERCKER_AWS_ECS_DELETE_UNUSED_SERVICE" == 'false' ]; then
-  NO_DELETE_UNUSED_SERVICE='--no-delete-unused-service'
-fi
 if [ ! -z "$WERCKER_AWS_ECS_THREADS_COUNT" ]; then
   THREADS_COUNT="--threads-count $WERCKER_AWS_ECS_THREADS_COUNT"
+fi
+if [ "$WERCKER_AWS_ECS_SHOULD_PROCESS_SERVICE" == 'false' ]; then
+  SHOULD_NOT_PROCESS_SERVICE='--should-not-process-service'
 fi
 
 
@@ -93,7 +93,7 @@ python3 "$WERCKER_STEP_ROOT/main.py" \
     --task-definition-template-dir "$WERCKER_AWS_ECS_TASK_DEFINITION_TEMPLATE_DIR" \
     $TEMPLATE_GROUP \
     $NO_TASK_DEFINITION_CONFIG_ENV \
-    $NO_DELETE_UNUSED_SERVICE \
+    $SHOULD_NOT_PROCESS_SERVICE \
     $SERVICE_ZERO_KEEP \
     $DEPLOY_SERVICE_GROUP \
     $THREADS_COUNT \

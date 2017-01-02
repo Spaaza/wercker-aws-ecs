@@ -1,5 +1,5 @@
 name: aws-ecs
-version: 0.6.19
+version: 0.6.20
 description: Deploy service to ECS
 keywords:
   - aws
@@ -15,6 +15,11 @@ properties:
   region:
     type: string
     required: false
+
+  should-process-service:
+    type: bool
+    required: false
+    default: true
 
   # Step 2: Defining task definition
   task-definition-template-dir:
@@ -33,10 +38,6 @@ properties:
     type: string
     required: false
   service-zero-keep:
-    type: bool
-    default: true
-    required: false
-  delete-unused-service:
     type: bool
     default: true
     required: false

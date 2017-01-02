@@ -188,9 +188,8 @@ def init():
     parser.add_argument('--no-service-zero-keep', dest='service_zero_keep', default=True, action='store_false', required=False)
     parser.add_argument('--template-group', dest='template_group', required=False)
     parser.add_argument('--deploy-service-group', dest='deploy_service_group', required=False)
-    parser.add_argument('--delete-unused-service', dest='delete_unused_service', default=True, action='store_true', required=False)
-    parser.add_argument('--no-delete-unused-service', dest='delete_unused_service', default=True, action='store_false', required=False)
     parser.add_argument('--should-process-service', dest='should_process_service', default=True, action='store_true', required=False)
+    parser.add_argument('--should-not-process-service', dest='should_process_service', default=True, action='store_false', required=False)
     return parser.parse_args()
 
 class ServiceManager(object):
@@ -224,66 +223,6 @@ class ServiceManager(object):
                 self.cluster_list.append(service.task_environment.cluster_name)
 
         self.error = False
-
-    def delete_unused_services(self, is_delete_unused_service):
-        h1("Step: Delete Unused Service")
-        if not is_delete_unused_service:
-            info("Do not delete unused service")
-            return
-
-        cluster_services = {}
-        for cluster_name in self.cluster_list:
-            running_service_arn_list = self.ecs_service.list_services(cluster_name)
-            response = self.ecs_service.describe_services(cluster_name, running_service_arn_list)
-            failures = response.get('failures')
-
-            # リストからサービス詳細が取れなければエラーにしてしまう
-            if len(failures) > 0:
-                for failure in failures:
-                    error("list service failer. service: '%s', reason: '%s'" % (failure.get('arn'), failure.get('reason')))
-                sys.exit(1)
-            cluster_services[cluster_name] = response['services']
-
-        task_definition_names = []
-        task_dict = {}
-        for cluster_name, d in cluster_services.items():
-            for service_description in d:
-                service_name = service_description['serviceName']
-
-                task_definition_name = service_description['taskDefinition']
-                response = self.ecs_service.describe_task_definition(task_definition_name)
-                response_task_environment = response['taskDefinition']['containerDefinitions'][0]['environment']
-
-                # 環境変数なし
-                if len(response_task_environment) <= 0:
-                    error("Service '%s' is environment value not found" % (service_name))
-                    self.error = True
-                    continue
-                try:
-                    task_environment = TaskEnvironment(response_task_environment)
-                # 環境変数の値が足りない 
-                except EnvironmentValueNotFoundException:
-                    error("Service '%s' is lack of environment value" % (service_name))
-                    self.error = True
-                    continue
-
-                # 同一環境のものだけ
-                if task_environment.environment != self.environment:
-                    continue
-                # 同一テンプレートグループだけ
-                if self.template_group:
-                    if not task_environment.template_group:
-                        error("Service '%s' is not set TEMPLATE_GROUP" % (service_name))
-                        self.error = True
-                        continue
-                    if task_environment.template_group != self.template_group:
-                        continue
-
-                ident_service_list = [ service for service in self.service_list if service.service_name == service_name and service.task_environment.cluster_name == cluster_name ]
-
-                if len(ident_service_list) <= 0:
-                    success("Delete service '%s' for service template deleted" % (service_name))
-                    self.ecs_service.delete_service(cluster_name, service_name)
 
     def import_service_from_task_definitions(self, task_definitions):
         service_list = []
@@ -366,9 +305,6 @@ if __name__ == '__main__':
     if args.should_process_service:
         # Step: Check ECS cluster
         service_manager.check_ecs_cluster()
-        
-        # Step: Delete Unused Service
-        service_manager.delete_unused_services(args.delete_unused_service)
         
         # Step: Register New Task Definition
         service_manager.register_new_task_definition()
